@@ -1,59 +1,234 @@
-# Spliti
+# ✿ TermKaiwa – Terminal Chat Application
 
-Spliti is a small expense-sharing web app built with Python's standard library, a browser frontend, and a Python WebSocket server.
+## Course Information
 
-## What it does
+Course: CMPT 371 – Data Communications & Networking
+Instructor: Mirza Zaeem Baig
+Semester: Spring 2026
 
-- Add shared expenses from the browser
-- Sync changes in real time over WebSocket
-- View totals by person
-- Calculate who should reimburse whom
+---
 
-## Project structure
+## Overview
 
-- `backend/server.py`: static HTTP server plus Python WebSocket server
-- `backend/client.py`: simple Python WebSocket CLI client
-- `frontend/`: static web UI
+TermKaiwa is a terminal-based chat application built using Python’s Socket API (TCP).
+It allows multiple users to connect to a server and communicate in real time.
 
-## Run locally
+The system follows a client-server architecture and supports:
 
-1. Start the server:
+- Group chat
+- Direct messaging
+- Secret room with a shared password
+- Username change
+- Mute specific users locally
+
+---
+
+## Features
+
+- Multiple clients can connect simultaneously
+- Real-time group chat
+- Private messaging using `/dm`
+- Username system (prevents duplicates)
+- Username change using `/rename`
+- Join/leave notifications
+- Online user list (`/users`)
+- Secret room with password (`/secret`, `/secret_leave`)
+- Client-side mute (`/mute`, `/unmute`)
+- Command system (`/help`, `/quit`)
+- Colored terminal UI using `rich`
+
+---
+
+## Commands
+
+| Command                    | Description              |
+| -------------------------- | ------------------------ |
+| `/users`                   | Show all online users    |
+| `/rename <username>`       | Change your username     |
+| `/dm <username> <message>` | Send a private message   |
+| `/secret <password>`       | Enter the secret room    |
+| `/secret_leave`            | Leave the secret room    |
+| `/mute <username>`         | Mute a user's messages   |
+| `/unmute <username>`       | Unmute a user's messages |
+| `/help`                    | Show available commands  |
+| `/quit`                    | Leave the chat           |
+
+---
+
+## Technologies Used
+
+- Python 3
+- Socket API (TCP)
+- Threading (for handling multiple clients concurrently)
+- rich (for terminal UI design)
+
+---
+
+## Prerequisites
+
+- Python 3.10 or higher
+- pip installed
+
+---
+
+## Installation
+
+### Clone the repository
 
 ```bash
-python3 backend/server.py
+git clone https://github.com/fleur0121/TermKaiwa.git
+cd TermKaiwa
 ```
 
-2. Open the web app:
+### Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Step-by-Step Run Guide
+
+### Start the server
+
+```bash
+python3 app/server.py
+```
+
+You will be prompted to set the secret room password.
+
+### Start a client
+
+Open another terminal and run:
+
+```bash
+python3 app/client.py
+```
+
+You can open multiple terminals to simulate multiple users.
+
+---
+
+## Example Usage
+
+1. Start the server
+2. Connect multiple clients
+3. Enter a username
+4. Send messages
+
+Example:
 
 ```text
-http://127.0.0.1:8000
+hello everyone
+/dm Alice hi
+/rename Fuka
+/secret mypass
+/secret_leave
+/mute Alice
+/users
 ```
 
-3. Optional: connect with the CLI client:
+---
 
-```bash
-python3 backend/client.py
+## System Limitations & Design Considerations
+
+### Handling Multiple Clients
+
+The server uses Python threading to handle multiple client connections.
+Each client runs in a separate thread.
+
+Limitation:
+Thread-based design may not scale efficiently for a very large number of users.
+
+---
+
+### Client Disconnections
+
+Disconnected clients are removed from the active list and other users are notified.
+
+Limitation:
+There is no automatic reconnection feature.
+
+---
+
+### Message Handling
+
+The system uses TCP to ensure reliable message delivery.
+
+Limitation:
+Messages are stored only in memory for the current server session. When the
+server restarts, history is lost.
+
+History behavior:
+
+- Public chat: new clients see the last 15 public messages on connect
+- Secret room: clients see the last 15 secret messages upon entering
+- Direct messages: `/dm <username>` shows the last 15 DMs with that user
+
+---
+
+### Security
+
+Messages are transmitted without encryption.
+
+Limitation:
+This application is not secure for sensitive communication.
+
+---
+
+## Video Demo
+
+(Add your video link here)
+
+---
+
+## Repository Structure
+
+```text
+TERMKAIWA/
+├── app/
+│   ├── client.py
+│   └── server.py
+├── requirements.txt
+└── README.md
 ```
 
-## Ports
+---
 
-- `8000`: serves the frontend files
-- `8765`: accepts WebSocket connections at `/ws`
+## Team Members
 
-## WebSocket messages
+- Fuka Nagata (301608021)
+- Narihiro Okada (301462533)
 
-Client to server:
+---
 
-- `{"type":"get_state"}`
-- `{"type":"add_expense","payer":"Alice","amount":30,"description":"Dinner"}`
-- `{"type":"reset"}`
+## Academic Integrity & References
 
-Server to client:
+### GenAI Usage
 
-- `{"type":"state","state":...}`
-- `{"type":"error","message":"..."}`
+ChatGPT was used to assist with:
 
-## Notes
+- Debugging socket communication issues and understanding error messages
 
-- Data is stored in memory, so restarting the server clears the expenses.
-- No external dependencies are required.
+- Assisting with the design and refinement of the terminal UI using the rich library
+
+- Suggesting improvements for code structure and organization
+
+- Assisting in writing and polishing parts of the README for clarity and structure
+
+- Brainstorming feature ideas such as secret rooms, rename, and mute commands
+
+- Reviewing edge cases around username validation and disconnect handling
+
+- Drafting example usage steps and command summaries
+
+### References
+
+- Python Socket Programming Documentation
+
+- Python threading module documentation
+
+- rich library documentation
+
+- Notes from CMPT 371
