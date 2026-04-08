@@ -123,20 +123,18 @@ In the GUI:
 ## Example Usage 🌟
 
 1. Start the server
-2. Connect multiple clients
-3. Enter a username
-4. Send messages
+2. Open two GUI clients
+3. Click `Connect` and enter usernames
+4. Send messages and try DM/Secret from the toolbar
 
 Example:
 
-```text
-hello everyone
-/dm Alice hi
-/rename Fuka
-/secret mypass
-/secret_leave
-/users
-```
+- Client A: Click `Connect` -> name: `Fuka`
+- Client B: Click `Connect` -> name: `Noa`
+- Client A: Type `hello everyone` and click `Send`
+- Client A: Click `DM` -> choose `Noa` -> send a private message
+- Client A: Click `Secret` -> enter password -> send a secret message
+- Client A: Click `Secret` again to leave
 
 ## System Limitations & Design Considerations ⚠️
 
