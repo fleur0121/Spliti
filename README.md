@@ -9,6 +9,7 @@ Semester: Spring 2026
 ## Overview 🌸
 
 TermKaiwa is a chat application built on Python’s Socket API (TCP).
+
 It includes a colorful tkinter GUI client, so multiple users can connect and chat in real time.
 
 The system follows a client-server architecture and supports:
@@ -35,6 +36,7 @@ The system follows a client-server architecture and supports:
 ## Commands (Optional) 📋
 
 The GUI client provides buttons for these actions, so you usually do not need to type commands.
+
 You can still enter the following server commands in the chat input if you want.
 
 ### Server commands
@@ -141,6 +143,7 @@ hello everyone
 ### Handling Multiple Clients
 
 The server uses Python threading to handle multiple client connections.
+
 Each client runs in a separate thread.
 
 Limitation:
