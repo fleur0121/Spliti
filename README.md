@@ -10,8 +10,8 @@ Semester: Spring 2026
 
 ## Overview 🌸
 
-TermKaiwa is a GUI-based chat application built using Python’s Socket API (TCP) with a light pink theme.
-It allows multiple users to connect to a server and communicate in real time.
+TermKaiwa is a chat application built on Python’s Socket API (TCP).
+It includes a colorful tkinter GUI client, so multiple users can connect and chat in real time.
 
 The system follows a client-server architecture and supports:
 
@@ -27,31 +27,41 @@ The system follows a client-server architecture and supports:
 
 - Multiple clients can connect simultaneously 👥
 - Real-time group chat 💬
-- Private messaging using `/dm` 💌
+- Private messaging 💌
 - Username system (prevents duplicates) 🏷️
-- Username change using `/rename` 🔄
+- Username change 🔄
 - Join/leave notifications 🔔
-- Online user list (`/users`) 👀
-- Secret room with password (`/secret`, `/secret_leave`) 🔐
-- Client-side mute (`/mute`, `/unmute`) 🤐
-- Command system (`/help`, `/quit`) ❓
+- Online user list 👀
+- Secret room with password 🔐
+- Client-side mute 🤐
 - Graphical User Interface using tkinter 🖥️
 
 ---
 
-## Commands 📋
+## Commands (Optional) 📋
 
-| Command                    | Description              |
-| -------------------------- | ------------------------ |
-| `/users`                   | Show all online users 👥 |
-| `/rename <username>`       | Change your username 🔄  |
-| `/dm <username> <message>` | Send a private message 💌 |
-| `/secret <password>`       | Enter the secret room 🔒 |
-| `/secret_leave`            | Leave the secret room 🚪 |
-| `/mute <username>`         | Mute a user's messages 🤫 |
-| `/unmute <username>`       | Unmute a user's messages 🔊 |
-| `/help`                    | Show available commands ❓ |
-| `/quit`                    | Leave the chat 👋       |
+The GUI client provides buttons for these actions, so you usually do not need to type commands.
+You can still enter the following server commands in the chat input if you want.
+
+### Server commands
+
+| Command                    | Description                        |
+| -------------------------- | ---------------------------------- |
+| `/users`                   | Show all online users 👥           |
+| `/rename <username>`       | Change your username 🔄            |
+| `/dm <username> <message>` | Send a private message 💌          |
+| `/dm <username>`           | Show last 15 DMs with that user 💬 |
+| `/secret <password>`       | Enter the secret room 🔒           |
+| `/secret_leave`            | Leave the secret room 🚪           |
+| `/help`                    | Show available commands ❓         |
+| `/quit`                    | Leave the chat 👋                  |
+
+### Local commands (terminal client only)
+
+| Command              | Description                 |
+| -------------------- | --------------------------- |
+| `/mute <username>`   | Mute a user's messages 🤫   |
+| `/unmute <username>` | Unmute a user's messages 🔊 |
 
 ---
 
@@ -60,7 +70,7 @@ The system follows a client-server architecture and supports:
 - Python 3 🐍
 - Socket API (TCP) 🔌
 - Threading (for handling multiple clients concurrently) 🧵
-- tkinter (for GUI) 🖼️
+- tkinter (GUI client) 🖼️
 
 ---
 
@@ -80,14 +90,6 @@ git clone https://github.com/fleur0121/TermKaiwa.git
 cd TermKaiwa
 ```
 
-### Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
 ## Step-by-Step Run Guide 📖
 
 ### Start the server
@@ -103,10 +105,10 @@ You will be prompted to set the secret room password.
 Open another terminal and run:
 
 ```bash
-python3 app/client.py
+python3 app/new_client.py
 ```
 
-You can open multiple terminals to simulate multiple users.
+You can open multiple GUI clients to simulate multiple users.
 
 ---
 
@@ -188,9 +190,8 @@ This application is not secure for sensitive communication.
 ```text
 TERMKAIWA/
 ├── app/
-│   ├── client.py
+│   ├── new_client.py
 │   └── server.py
-├── requirements.txt
 └── README.md
 ```
 
@@ -230,5 +231,7 @@ ChatGPT was used to assist with:
 - Python threading module documentation
 
 - tkinter module documentation (https://docs.python.org/3/library/tkinter.html)
+
+- tkinter.ttk module documentation (https://docs.python.org/3/library/tkinter.ttk.html)
 
 - Notes from CMPT 371
