@@ -14,11 +14,31 @@ muted_lock = threading.Lock()
 
 
 def is_muted(username):
+    """
+    # Description
+    Check if a username is muted locally.
+
+    # Arguments
+    username: the username to check
+
+    # Returns
+    True if the username is muted, False otherwise
+    """
     with muted_lock:
         return username in muted_users
 
 
 def mute_user(username):
+    """
+    # Description
+    Add a username to the local mute list.
+
+    # Arguments
+    username: the username to mute
+
+    # Returns
+    True if successfully muted, False if already muted
+    """
     with muted_lock:
         if username in muted_users:
             return False
@@ -27,6 +47,16 @@ def mute_user(username):
 
 
 def unmute_user(username):
+    """
+    # Description
+    Remove a username from the local mute list.
+
+    # Arguments
+    username: the username to unmute
+
+    # Returns
+    True if successfully unmuted, False if not muted
+    """
     with muted_lock:
         if username not in muted_users:
             return False
@@ -35,12 +65,32 @@ def unmute_user(username):
 
 
 def get_sender_chat(message):
+    """
+    # Description
+    Extract the sender username from a group chat message.
+
+    # Arguments
+    message: the message string
+
+    # Returns
+    The sender username if it's a group message, None otherwise
+    """
     if ": " in message and not message.startswith("["):
         return message.split(": ", 1)[0]
     return None
 
 
 def get_sender_dm(message):
+    """
+    # Description
+    Extract the sender username from a DM message.
+
+    # Arguments
+    message: the message string
+
+    # Returns
+    The sender username if it's a DM, None otherwise
+    """
     if message.startswith("[DM from "):
         try:
             return message[len("[DM from ") :].split("]", 1)[0]
@@ -50,6 +100,10 @@ def get_sender_dm(message):
 
 
 def main():
+    """
+    # Description
+    Main entry point for the GUI chat client.
+    """
     root = tk.Tk()
     root.title("TermKaiwa 🌸")
     root.geometry("860x680")
@@ -98,6 +152,7 @@ def main():
         )
 
     # Top banner
+    # Banner Section
     banner = tk.Frame(root, bg=colors["panel"], highlightthickness=0, bd=0)
     banner.pack(fill=tk.X, padx=12, pady=(12, 6))
 
@@ -146,7 +201,7 @@ def main():
     subtitle.pack(anchor="w", padx=10, pady=(0, 6))
     flower_canvas.pack(side=tk.RIGHT, padx=10, pady=6)
 
-    # Main layout
+    # Main Layout Section
     main_frame = tk.Frame(root, bg=colors["bg"], highlightthickness=0, bd=0)
     main_frame.pack(fill=tk.BOTH, expand=True, padx=12, pady=(0, 6))
 
@@ -164,7 +219,7 @@ def main():
     left_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
     right_panel.pack(side=tk.RIGHT, fill=tk.Y)
 
-    # View selector
+    # View Selector Section
     view_frame = tk.Frame(
         left_panel, bg=colors["bg"], highlightthickness=0, bd=0
     )
@@ -196,7 +251,7 @@ def main():
     secret_view_btn.pack(side=tk.LEFT, padx=4)
     view_frame.pack(fill=tk.X, padx=2, pady=(0, 6))
 
-    # Chat display area
+    # Chat Display Area Section
     frame = tk.Frame(left_panel, bg=colors["bg"], highlightthickness=0, bd=0)
     chat_text = tk.Text(
         frame,
@@ -460,7 +515,7 @@ def main():
         justify=tk.CENTER,
     )
 
-    # Toolbar for commands
+    # Toolbar Section
     toolbar = tk.Frame(left_panel, bg=colors["bg"], highlightthickness=0, bd=0)
     users_btn = make_button(
         toolbar,
@@ -518,7 +573,7 @@ def main():
     quit_btn.pack(side=tk.LEFT, padx=5, pady=5)
     toolbar.pack(fill=tk.X)
 
-    # Bottom input area
+    # Bottom Input Area Section
     bottom_frame = tk.Frame(
         left_panel, bg=colors["bg"], highlightthickness=0, bd=0
     )
@@ -548,7 +603,7 @@ def main():
     # Bind Enter to send
     entry.bind("<Return>", lambda e: send_message())
 
-    # Right panel widgets
+    # Right Panel Section
     status_frame = tk.Frame(
         right_panel, bg=colors["panel"], highlightthickness=0, bd=0
     )
@@ -596,18 +651,14 @@ def main():
     )
     users_title.pack(anchor="w", pady=(0, 4))
 
-    users_list = tk.Listbox(
+    users_container = tk.Frame(
         users_frame,
-        height=8,
         bg=colors["white"],
-        fg=colors["text"],
         relief=tk.FLAT,
-        selectbackground=colors["accent"],
         bd=0,
         highlightthickness=0,
-        highlightbackground=colors["white"],
     )
-    users_list.pack(fill=tk.BOTH, expand=True)
+    users_container.pack(fill=tk.BOTH, expand=True)
 
     users_refresh = make_button(
         users_frame,
@@ -619,6 +670,7 @@ def main():
     )
     users_refresh.pack(fill=tk.X, pady=(6, 0))
 
+    # Client Implementation Section
     client_socket = None
     username = None
     in_secret = False
@@ -626,8 +678,20 @@ def main():
     current_view = "public"
     current_dm_user = None
     histories = {"public": [], "secret": []}
+    refresh_job = None
 
     def get_message_parts(text, tag):
+        """
+        # Description
+        Parse a message into sender, body, and sender tag for display formatting.
+
+        # Arguments
+        text: the message text
+        tag: the message tag (e.g., "chat", "dm_in")
+
+        # Returns
+        A tuple of (sender, body, sender_tag) or (None, text, None) if not parsed
+        """
         if tag == "join_leave":
             return None, text, None
         if tag == "you" and text.startswith("[You] "):
@@ -646,9 +710,23 @@ def main():
         return None, text, None
 
     def current_timestamp():
+        """
+        # Description
+        Get the current time formatted as HH:MM.
+
+        # Returns
+        A string representing the current time in HH:MM format
+        """
         return datetime.now().strftime("%H:%M")
 
     def insert_history_item(item):
+        """
+        # Description
+        Insert a message item into the chat text widget with proper formatting.
+
+        # Arguments
+        item: a dictionary with 'text', 'tag', and 'timestamp' keys
+        """
         text = item["text"]
         tag = item["tag"]
         timestamp = item["timestamp"]
@@ -659,6 +737,14 @@ def main():
         chat_text.insert(tk.END, timestamp + "\n", f"{tag}_time")
 
     def insert_message(text, tag):
+        """
+        # Description
+        Insert a message into the chat text widget and scroll to the end.
+
+        # Arguments
+        text: the message text
+        tag: the tag for styling the message
+        """
         chat_text.config(state=tk.NORMAL)
         insert_history_item(
             {
@@ -671,9 +757,25 @@ def main():
         chat_text.config(state=tk.DISABLED)
 
     def set_status(text):
+        """
+        # Description
+        Update the status label text.
+
+        # Arguments
+        text: the new status text
+        """
         status_label.config(text=f"Status: {text}")
 
     def append_history(view_key, text, tag):
+        """
+        # Description
+        Append a message to the history for a specific view.
+
+        # Arguments
+        view_key: the key for the view (e.g., "public", "dm:user")
+        text: the message text
+        tag: the message tag
+        """
         history = histories.setdefault(view_key, [])
         history.append(
             {
@@ -686,6 +788,13 @@ def main():
             del history[: len(history) - 200]
 
     def render_view(view_key):
+        """
+        # Description
+        Render the chat history for a specific view in the text widget.
+
+        # Arguments
+        view_key: the key for the view to render
+        """
         chat_text.config(state=tk.NORMAL)
         chat_text.delete("1.0", tk.END)
         for item in histories.get(view_key, []):
@@ -694,6 +803,13 @@ def main():
         chat_text.config(state=tk.DISABLED)
 
     def set_view(view_key):
+        """
+        # Description
+        Set the current view to the specified view key, update UI labels, and render the view.
+
+        # Arguments
+        view_key: the key for the view to set (e.g., 'public', 'secret', 'dm:user')
+        """
         nonlocal current_view, current_dm_user
         if view_key == "secret" and not in_secret:
             insert_message("[LOCAL] Enter secret room first. 🌼", "local")
@@ -710,6 +826,13 @@ def main():
         render_view(view_key)
 
     def print_message(message):
+        """
+        # Description
+        Process and display incoming messages from the server, handling different message types.
+
+        # Arguments
+        message: the message string received from the server
+        """
         nonlocal in_secret
 
         def is_command_help_line(line):
@@ -818,6 +941,28 @@ def main():
             elif message.startswith("[SERVER] Online users:"):
                 users = message.split(":", 1)[1].strip()
                 update_user_list(users)
+            elif message == "[SERVER] Entered the secret room.":
+                in_secret = True
+                secret_btn.config(text="🔓 Leave Secret")
+                secret_view_btn.config(state=tk.NORMAL)
+                public_view_btn.config(state=tk.DISABLED)
+                set_view("secret")
+                # Show secret history if any
+                secret_history = histories.get("secret", [])
+                if secret_history:
+                    insert_message("[SERVER] Last 15 secret messages:\n" + "\n".join(secret_history), "server")
+            elif message == "[SERVER] Left the secret room.":
+                in_secret = False
+                secret_btn.config(text="🔒 Secret")
+                secret_view_btn.config(state=tk.DISABLED)
+                public_view_btn.config(state=tk.NORMAL)
+                set_view("public")
+            elif message == "[SERVER] Wrong password.":
+                in_secret = False
+                secret_btn.config(text="🔒 Secret")
+                secret_view_btn.config(state=tk.DISABLED)
+                public_view_btn.config(state=tk.NORMAL)
+                set_view("public")
             else:
                 append_history("public", message, "server")
                 if current_view == "public":
@@ -838,6 +983,16 @@ def main():
             insert_message(message, "chat")
 
     def connect(uname):
+        """
+        # Description
+        Attempt to connect to the server with the given username.
+
+        # Arguments
+        uname: the username to connect with
+
+        # Returns
+        socket object if connection successful, None otherwise
+        """
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.connect((HOST, PORT))
@@ -853,6 +1008,10 @@ def main():
             return None
 
     def connect_flow():
+        """
+        # Description
+        Handle the connection process: get username, connect to server, start receiving messages.
+        """
         nonlocal client_socket, username, connected
         if connected:
             insert_message("[LOCAL] Already connected. 🌼", "local")
@@ -874,8 +1033,13 @@ def main():
         set_status(f"Connected as {username}")
         start_receiver()
         show_users()
+        start_auto_refresh()
 
     def disconnect_flow():
+        """
+        # Description
+        Handle the disconnection process: send quit command, close socket, reset state.
+        """
         nonlocal client_socket, connected, in_secret
         if not connected:
             insert_message("[LOCAL] Not connected. 🌼", "local")
@@ -895,8 +1059,13 @@ def main():
         secret_view_btn.config(state=tk.DISABLED)
         set_status("Disconnected")
         set_view("public")
+        stop_auto_refresh()
 
     def send_message():
+        """
+        # Description
+        Send a message to the server based on the current view (public, secret, or DM).
+        """
         if not client_socket:
             insert_message("[LOCAL] Connect first. 🌼", "local")
             return
@@ -914,6 +1083,10 @@ def main():
             insert_message("[ERROR] Failed to send message.", "error")
 
     def show_users():
+        """
+        # Description
+        Request the list of online users from the server.
+        """
         if not client_socket:
             insert_message("[LOCAL] Connect first. 🌼", "local")
             return
@@ -923,13 +1096,72 @@ def main():
             insert_message("[ERROR] Failed to get users.", "error")
 
     def update_user_list(users_line):
-        users_list.delete(0, tk.END)
+        """
+        # Description
+        Update the user list display with the received user list.
+
+        # Arguments
+        users_line: the string containing the list of users
+        """
+        # Clear existing labels
+        for widget in users_container.winfo_children():
+            widget.destroy()
+        
         if users_line == "No users connected." or users_line == "":
             return
-        for user in [u.strip() for u in users_line.split(",") if u.strip()]:
-            users_list.insert(tk.END, user)
+        
+        user_list = [u.strip() for u in users_line.split(",") if u.strip()]
+        if username and username in user_list:
+            user_list.remove(username)
+            user_list.insert(0, f"{username} (You)")
+        
+        for user in user_list:
+            if user.endswith(" (You)"):
+                fg = colors["accent_dark"]
+                font = ("Comic Sans MS", 10, "bold")
+            else:
+                fg = colors["text"]
+                font = ("Comic Sans MS", 10)
+            
+            label = tk.Label(
+                users_container, 
+                text=user, 
+                bg=colors["white"], 
+                fg=fg, 
+                font=font, 
+                anchor="w",
+                padx=5,
+                pady=1
+            )
+            label.pack(fill=tk.X)
+            # Bind double-click to open DM
+            clean_user = user.replace(" (You)", "")
+            label.bind("<Double-Button-1>", lambda e, u=clean_user: open_dm_from_list(u))
+
+    def start_auto_refresh():
+        """
+        # Description
+        Start the automatic refresh of the user list every 5 seconds.
+        """
+        nonlocal refresh_job
+        def refresh():
+            nonlocal refresh_job
+            if connected and client_socket:
+                show_users()
+            refresh_job = root.after(5000, refresh)  # 5 seconds
+        refresh_job = root.after(5000, refresh)
+
+    def stop_auto_refresh():
+        nonlocal refresh_job
+        if refresh_job:
+            root.after_cancel(refresh_job)
+            refresh_job = None
 
     def send_dm():
+        """
+        # Description
+        Open a dialog to select a user to DM and switch to DM view.
+        """
         if not client_socket:
             insert_message("[LOCAL] Connect first. 🌼", "local")
             return
@@ -938,9 +1170,30 @@ def main():
         )
         if not target:
             return
-        set_view(f"dm:{target.strip()}")
+        target = target.strip()
+        if not target:
+            return
+        # Check if user exists
+        users = []
+        for child in users_container.winfo_children():
+            if isinstance(child, tk.Label):
+                text = child.cget("text")
+                if text.endswith(" (You)"):
+                    text = text[:-6]  # remove " (You)"
+                users.append(text)
+        if target not in users:
+            messagebox.showerror("Invalid User 😞", f"User '{target}' not found.")
+            return
+        if target == username:
+            messagebox.showerror("Invalid", "You cannot DM yourself. 😊")
+            return
+        set_view(f"dm:{target}")
 
     def rename_user():
+        """
+        # Description
+        Open a dialog to change the username.
+        """
         if not client_socket:
             insert_message("[LOCAL] Connect first. 🌼", "local")
             return
@@ -965,6 +1218,7 @@ def main():
                 in_secret = False
                 secret_btn.config(text="🔒 Secret")
                 secret_view_btn.config(state=tk.DISABLED)
+                public_view_btn.config(state=tk.NORMAL)
                 set_view("public")
             except:
                 insert_message("[ERROR] Failed to leave secret.", "error")
@@ -979,6 +1233,7 @@ def main():
                 in_secret = True
                 secret_btn.config(text="🔓 Leave Secret")
                 secret_view_btn.config(state=tk.NORMAL)
+                public_view_btn.config(state=tk.DISABLED)
                 set_view("secret")
             except:
                 insert_message("[ERROR] Failed to enter secret.", "error")
@@ -1015,6 +1270,13 @@ def main():
         root.quit()
 
     def receive_messages(sock):
+        """
+        # Description
+        Receive messages from the server in a separate thread and process them.
+
+        # Arguments
+        sock: the client socket
+        """
         while True:
             try:
                 message = sock.recv(BUFFER_SIZE).decode()
@@ -1041,15 +1303,10 @@ def main():
         receive_thread.daemon = True
         receive_thread.start()
 
-    def open_dm_from_list(_event=None):
-        selection = users_list.curselection()
-        if not selection:
-            return
-        target = users_list.get(selection[0])
+    def open_dm_from_list(target):
         if target:
             set_view(f"dm:{target}")
 
-    users_list.bind("<Double-Button-1>", open_dm_from_list)
     secret_view_btn.config(state=tk.DISABLED)
 
     root.mainloop()
