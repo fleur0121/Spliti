@@ -1,8 +1,12 @@
-import socket
+# Main GUI chat client implementation using Tkinter
+
 import threading
 import tkinter as tk
 from datetime import datetime
 from tkinter import simpledialog, messagebox, ttk
+
+from chat_client import ChatClient
+from chat_ui import ChatUI
 
 HOST = "127.0.0.1"
 PORT = 5555
@@ -109,569 +113,28 @@ def main():
     root.geometry("860x680")
     root.configure(bg="#FFF5F8")
 
-    colors = {
-        "bg": "#FFF5F8",
-        "panel": "#FFE6F0",
-        "accent": "#FFB3C7",
-        "accent_dark": "#FF7AA2",
-        "mint": "#D8F8E1",
-        "mint_dark": "#7BD88F",
-        "lavender": "#F1E7FF",
-        "sky": "#E8F6FF",
-        "cream": "#FFF7E3",
-        "text": "#3B3B3B",
-        "white": "#FFFFFF",
-        "shadow": "#F7C6D6",
-        "line_bg": "#F7F4EE",
-    }
-
-    root.option_add("*Button.borderWidth", 0)
-    root.option_add("*Button.highlightThickness", 0)
-    root.option_add("*Entry.highlightThickness", 0)
-    root.option_add("*Listbox.highlightThickness", 0)
-    root.option_add("*Text.highlightThickness", 0)
-    root.option_add("*Scrollbar.borderWidth", 0)
-
-    def make_button(parent, text, command, bg, fg, font):
-        return tk.Button(
-            parent,
-            text=text,
-            command=command,
-            bg=bg,
-            fg=fg,
-            activebackground=colors["panel"],
-            activeforeground=fg,
-            font=font,
-            relief=tk.FLAT,
-            bd=0,
-            highlightthickness=0,
-            highlightbackground=colors["panel"],
-            highlightcolor=colors["panel"],
-            takefocus=0,
-            overrelief=tk.FLAT,
-        )
-
-    # Top banner
-    # Banner Section
-    banner = tk.Frame(root, bg=colors["panel"], highlightthickness=0, bd=0)
-    banner.pack(fill=tk.X, padx=12, pady=(12, 6))
-
-    title = tk.Label(
-        banner,
-        text="TermKaiwa",
-        bg=colors["panel"],
-        fg=colors["accent_dark"],
-        font=("Comic Sans MS", 18, "bold"),
-    )
-    subtitle = tk.Label(
-        banner,
-        text="Tiny chat app 🌷",
-        bg=colors["panel"],
-        fg=colors["text"],
-        font=("Comic Sans MS", 10),
-    )
-
-    flower_canvas = tk.Canvas(
-        banner,
-        width=120,
-        height=42,
-        bg=colors["panel"],
-        highlightthickness=0,
-    )
-
-    def draw_flower(canvas, x, y, petal, center, scale=1.0):
-        r = 7 * scale
-        canvas.create_oval(x - r, y - r, x + r, y + r, fill=center, outline="")
-        offsets = [(-10, 0), (10, 0), (0, -10), (0, 10)]
-        for dx, dy in offsets:
-            canvas.create_oval(
-                x + dx - r,
-                y + dy - r,
-                x + dx + r,
-                y + dy + r,
-                fill=petal,
-                outline="",
-            )
-
-    draw_flower(flower_canvas, 20, 20, "#FFC6DD", "#FFDF6E", 0.9)
-    draw_flower(flower_canvas, 55, 18, "#CDE7FF", "#FFD9F0", 0.8)
-    draw_flower(flower_canvas, 90, 22, "#EAD7FF", "#FFE8A3", 0.95)
-
-    title.pack(anchor="w", padx=10, pady=(6, 0))
-    subtitle.pack(anchor="w", padx=10, pady=(0, 6))
-    flower_canvas.pack(side=tk.RIGHT, padx=10, pady=6)
-
-    # Main Layout Section
-    main_frame = tk.Frame(root, bg=colors["bg"], highlightthickness=0, bd=0)
-    main_frame.pack(fill=tk.BOTH, expand=True, padx=12, pady=(0, 6))
-
-    left_panel = tk.Frame(
-        main_frame, bg=colors["bg"], highlightthickness=0, bd=0
-    )
-    right_panel = tk.Frame(
-        main_frame,
-        bg=colors["panel"],
-        width=220,
-        relief=tk.FLAT,
-        highlightthickness=0,
-        bd=0,
-    )
-    left_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-    right_panel.pack(side=tk.RIGHT, fill=tk.Y)
-
-    # View Selector Section
-    view_frame = tk.Frame(
-        left_panel, bg=colors["bg"], highlightthickness=0, bd=0
-    )
-    view_label = tk.Label(
-        view_frame,
-        text="Now chatting: Public",
-        bg=colors["bg"],
-        fg=colors["accent_dark"],
-        font=("Comic Sans MS", 10, "bold"),
-    )
-    public_view_btn = make_button(
-        view_frame,
-        "🌸 Public",
-        lambda: set_view("public"),
-        colors["accent"],
-        colors["text"],
-        ("Comic Sans MS", 9),
-    )
-    secret_view_btn = make_button(
-        view_frame,
-        "🔒 Secret",
-        lambda: set_view("secret"),
-        colors["accent"],
-        colors["text"],
-        ("Comic Sans MS", 9),
-    )
-    view_label.pack(side=tk.LEFT, padx=(2, 8))
-    public_view_btn.pack(side=tk.LEFT, padx=4)
-    secret_view_btn.pack(side=tk.LEFT, padx=4)
-    view_frame.pack(fill=tk.X, padx=2, pady=(0, 6))
-
-    # Chat Display Area Section
-    frame = tk.Frame(left_panel, bg=colors["bg"], highlightthickness=0, bd=0)
-    chat_text = tk.Text(
-        frame,
-        wrap=tk.WORD,
-        state=tk.DISABLED,
-        bg=colors["line_bg"],
-        fg=colors["text"],
-        font=("Comic Sans MS", 10),
-        padx=14,
-        pady=14,
-        relief=tk.FLAT,
-        bd=0,
-        highlightthickness=0,
-        highlightbackground=colors["line_bg"],
-    )
-    scrollbar = tk.Scrollbar(
-        frame,
-        command=chat_text.yview,
-        relief=tk.FLAT,
-        bd=0,
-        highlightthickness=0,
-    )
-    chat_text.config(yscrollcommand=scrollbar.set)
-    chat_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-    frame.pack(fill=tk.BOTH, expand=True, padx=2, pady=(2, 10))
-
-    # Configure tags for styling
-    chat_text.tag_configure(
-        "server",
-        foreground=colors["accent_dark"],
-        background=colors["panel"],
-        font=("Comic Sans MS", 9, "bold"),
-        spacing1=10,
-        spacing3=10,
-        lmargin1=180,
-        lmargin2=180,
-        rmargin=180,
-        justify=tk.CENTER,
-    )
-    chat_text.tag_configure(
-        "server_time",
-        foreground="#C7899B",
-        background=colors["panel"],
-        font=("Comic Sans MS", 8),
-        spacing1=0,
-        spacing3=10,
-        lmargin1=180,
-        lmargin2=180,
-        rmargin=180,
-        justify=tk.CENTER,
-    )
-    chat_text.tag_configure(
-        "you_sender",
-        foreground="#3F8D54",
-        background=colors["mint"],
-        font=("Comic Sans MS", 8, "bold"),
-        spacing1=10,
-        spacing3=0,
-        lmargin1=280,
-        lmargin2=280,
-        rmargin=24,
-        justify=tk.RIGHT,
-    )
-    chat_text.tag_configure(
-        "you",
-        foreground=colors["mint_dark"],
-        background=colors["mint"],
-        font=("Comic Sans MS", 11, "bold"),
-        spacing1=2,
-        spacing3=2,
-        lmargin1=280,
-        lmargin2=280,
-        rmargin=24,
-        justify=tk.RIGHT,
-    )
-    chat_text.tag_configure(
-        "you_time",
-        foreground="#5AA06A",
-        background=colors["mint"],
-        font=("Comic Sans MS", 8),
-        spacing1=0,
-        spacing3=10,
-        lmargin1=280,
-        lmargin2=280,
-        rmargin=24,
-        justify=tk.RIGHT,
-    )
-    chat_text.tag_configure(
-        "dm_in",
-        foreground="#7A4DD8",
-        background=colors["lavender"],
-        font=("Comic Sans MS", 11),
-        spacing1=2,
-        spacing3=2,
-        lmargin1=24,
-        lmargin2=24,
-        rmargin=280,
-    )
-    chat_text.tag_configure(
-        "dm_in_sender",
-        foreground="#6B44BB",
-        background=colors["lavender"],
-        font=("Comic Sans MS", 8, "bold"),
-        spacing1=10,
-        spacing3=0,
-        lmargin1=24,
-        lmargin2=24,
-        rmargin=280,
-    )
-    chat_text.tag_configure(
-        "dm_in_time",
-        foreground="#9C7EDB",
-        background=colors["lavender"],
-        font=("Comic Sans MS", 8),
-        spacing1=0,
-        spacing3=10,
-        lmargin1=24,
-        lmargin2=24,
-        rmargin=280,
-    )
-    chat_text.tag_configure(
-        "dm_out",
-        foreground="#7A4DD8",
-        background=colors["lavender"],
-        font=("Comic Sans MS", 11),
-        spacing1=2,
-        spacing3=2,
-        lmargin1=280,
-        lmargin2=280,
-        rmargin=24,
-        justify=tk.RIGHT,
-    )
-    chat_text.tag_configure(
-        "dm_out_sender",
-        foreground="#6B44BB",
-        background=colors["lavender"],
-        font=("Comic Sans MS", 8, "bold"),
-        spacing1=10,
-        spacing3=0,
-        lmargin1=280,
-        lmargin2=280,
-        rmargin=24,
-        justify=tk.RIGHT,
-    )
-    chat_text.tag_configure(
-        "dm_out_time",
-        foreground="#9C7EDB",
-        background=colors["lavender"],
-        font=("Comic Sans MS", 8),
-        spacing1=0,
-        spacing3=10,
-        lmargin1=280,
-        lmargin2=280,
-        rmargin=24,
-        justify=tk.RIGHT,
-    )
-    chat_text.tag_configure(
-        "join_leave",
-        foreground="#C27700",
-        background=colors["cream"],
-        font=("Comic Sans MS", 9, "bold"),
-        spacing1=10,
-        spacing3=10,
-        lmargin1=210,
-        lmargin2=210,
-        rmargin=210,
-        justify=tk.CENTER,
-    )
-    chat_text.tag_configure(
-        "join_leave_time",
-        foreground="#D39C46",
-        background=colors["cream"],
-        font=("Comic Sans MS", 8),
-        spacing1=0,
-        spacing3=10,
-        lmargin1=210,
-        lmargin2=210,
-        rmargin=210,
-        justify=tk.CENTER,
-    )
-    chat_text.tag_configure(
-        "error",
-        foreground="#B00020",
-        background="#FFE5EA",
-        font=("Comic Sans MS", 9, "bold"),
-        spacing1=10,
-        spacing3=10,
-        lmargin1=170,
-        lmargin2=170,
-        rmargin=170,
-        justify=tk.CENTER,
-    )
-    chat_text.tag_configure(
-        "error_time",
-        foreground="#CC6B7F",
-        background="#FFE5EA",
-        font=("Comic Sans MS", 8),
-        spacing1=0,
-        spacing3=10,
-        lmargin1=170,
-        lmargin2=170,
-        rmargin=170,
-        justify=tk.CENTER,
-    )
-    chat_text.tag_configure(
-        "chat",
-        foreground=colors["text"],
-        background=colors["sky"],
-        font=("Comic Sans MS", 11),
-        spacing1=2,
-        spacing3=2,
-        lmargin1=24,
-        lmargin2=24,
-        rmargin=280,
-    )
-    chat_text.tag_configure(
-        "chat_sender",
-        foreground="#53748C",
-        background=colors["sky"],
-        font=("Comic Sans MS", 8, "bold"),
-        spacing1=10,
-        spacing3=0,
-        lmargin1=24,
-        lmargin2=24,
-        rmargin=280,
-    )
-    chat_text.tag_configure(
-        "chat_time",
-        foreground="#6F8B9B",
-        background=colors["sky"],
-        font=("Comic Sans MS", 8),
-        spacing1=0,
-        spacing3=10,
-        lmargin1=24,
-        lmargin2=24,
-        rmargin=280,
-    )
-    chat_text.tag_configure(
-        "local",
-        foreground="#0D7F87",
-        background="#D9FEFF",
-        font=("Comic Sans MS", 9, "bold"),
-        spacing1=10,
-        spacing3=10,
-        lmargin1=170,
-        lmargin2=170,
-        rmargin=170,
-        justify=tk.CENTER,
-    )
-    chat_text.tag_configure(
-        "local_time",
-        foreground="#5FA8AD",
-        background="#D9FEFF",
-        font=("Comic Sans MS", 8),
-        spacing1=0,
-        spacing3=10,
-        lmargin1=170,
-        lmargin2=170,
-        rmargin=170,
-        justify=tk.CENTER,
-    )
-
-    # Toolbar Section
-    toolbar = tk.Frame(left_panel, bg=colors["bg"], highlightthickness=0, bd=0)
-    users_btn = make_button(
-        toolbar,
-        "👥 Users",
-        lambda: show_users(),
-        colors["accent"],
-        colors["text"],
-        ("Comic Sans MS", 9),
-    )
-    dm_btn = make_button(
-        toolbar,
-        "💌 DM",
-        lambda: send_dm(),
-        colors["accent"],
-        colors["text"],
-        ("Comic Sans MS", 9),
-    )
-    rename_btn = make_button(
-        toolbar,
-        "✏️ Rename",
-        lambda: rename_user(),
-        colors["accent"],
-        colors["text"],
-        ("Comic Sans MS", 9),
-    )
-    secret_btn = make_button(
-        toolbar,
-        "🔒 Secret",
-        lambda: toggle_secret(),
-        colors["accent"],
-        colors["text"],
-        ("Comic Sans MS", 9),
-    )
-    mute_btn = make_button(
-        toolbar,
-        "🔇 Mute",
-        lambda: toggle_mute(),
-        colors["accent"],
-        colors["text"],
-        ("Comic Sans MS", 9),
-    )
-    quit_btn = make_button(
-        toolbar,
-        "👋 Quit",
-        lambda: quit_app(),
-        colors["accent"],
-        colors["text"],
-        ("Comic Sans MS", 9),
-    )
-    users_btn.pack(side=tk.LEFT, padx=5, pady=5)
-    dm_btn.pack(side=tk.LEFT, padx=5, pady=5)
-    rename_btn.pack(side=tk.LEFT, padx=5, pady=5)
-    secret_btn.pack(side=tk.LEFT, padx=5, pady=5)
-    mute_btn.pack(side=tk.LEFT, padx=5, pady=5)
-    quit_btn.pack(side=tk.LEFT, padx=5, pady=5)
-    toolbar.pack(fill=tk.X)
-
-    # Bottom Input Area Section
-    bottom_frame = tk.Frame(
-        left_panel, bg=colors["bg"], highlightthickness=0, bd=0
-    )
-    entry = tk.Entry(
-        bottom_frame,
-        font=("Comic Sans MS", 10),
-        relief=tk.FLAT,
-        bg=colors["white"],
-        fg=colors["text"],
-        insertbackground=colors["accent_dark"],
-        bd=0,
-        highlightthickness=0,
-        highlightbackground=colors["white"],
-    )
-    send_button = make_button(
-        bottom_frame,
-        "📤 Send",
-        lambda: send_message(),
-        colors["mint"],
-        colors["text"],
-        ("Comic Sans MS", 10, "bold"),
-    )
-    entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5, pady=5)
-    send_button.pack(side=tk.RIGHT, padx=5, pady=5)
-    bottom_frame.pack(fill=tk.X, padx=2, pady=(0, 10))
-
-    # Bind Enter to send
-    entry.bind("<Return>", lambda e: send_message())
-
-    # Right Panel Section
-    status_frame = tk.Frame(
-        right_panel, bg=colors["panel"], highlightthickness=0, bd=0
-    )
-    status_frame.pack(fill=tk.X, padx=10, pady=(10, 4))
-
-    status_label = tk.Label(
-        status_frame,
-        text="Status: Disconnected",
-        bg=colors["panel"],
-        fg=colors["text"],
-        font=("Comic Sans MS", 10, "bold"),
-    )
-    status_label.pack(anchor="w")
-
-    connect_btn = make_button(
-        status_frame,
-        "🔌 Connect",
-        lambda: connect_flow(),
-        colors["accent"],
-        colors["text"],
-        ("Comic Sans MS", 9),
-    )
-    disconnect_btn = make_button(
-        status_frame,
-        "⛔ Disconnect",
-        lambda: disconnect_flow(),
-        colors["accent"],
-        colors["text"],
-        ("Comic Sans MS", 9),
-    )
-    connect_btn.pack(fill=tk.X, pady=(6, 2))
-    disconnect_btn.pack(fill=tk.X, pady=(2, 0))
-
-    users_frame = tk.Frame(
-        right_panel, bg=colors["panel"], highlightthickness=0, bd=0
-    )
-    users_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=6)
-
-    users_title = tk.Label(
-        users_frame,
-        text="Online Users",
-        bg=colors["panel"],
-        fg=colors["accent_dark"],
-        font=("Comic Sans MS", 10, "bold"),
-    )
-    users_title.pack(anchor="w", pady=(0, 4))
-
-    users_container = tk.Frame(
-        users_frame,
-        bg=colors["white"],
-        relief=tk.FLAT,
-        bd=0,
-        highlightthickness=0,
-    )
-    users_container.pack(fill=tk.BOTH, expand=True)
-
-    users_refresh = make_button(
-        users_frame,
-        "🔄 Refresh",
-        lambda: show_users(),
-        colors["accent"],
-        colors["text"],
-        ("Comic Sans MS", 9),
-    )
-    users_refresh.pack(fill=tk.X, pady=(6, 0))
+    ui = ChatUI(root)
+    colors = ui.colors
+    view_label = ui.view_label
+    public_view_btn = ui.public_view_btn
+    secret_view_btn = ui.secret_view_btn
+    chat_text = ui.chat_text
+    entry = ui.entry
+    status_label = ui.status_label
+    users_container = ui.users_container
+    secret_btn = ui.secret_btn
+    users_refresh = ui.users_refresh
+    connect_btn = ui.connect_btn
+    disconnect_btn = ui.disconnect_btn
+    users_btn = ui.users_btn
+    dm_btn = ui.dm_btn
+    rename_btn = ui.rename_btn
+    mute_btn = ui.mute_btn
+    quit_btn = ui.quit_btn
+    send_button = ui.send_button
 
     # Client Implementation Section
-    client_socket = None
+    client = ChatClient(HOST, PORT, BUFFER_SIZE)
     username = None
     in_secret = False
     connected = False
@@ -833,7 +296,7 @@ def main():
         # Arguments
         message: the message string received from the server
         """
-        nonlocal in_secret
+        nonlocal in_secret, username
 
         def is_command_help_line(line):
             trimmed = line.strip()
@@ -941,6 +404,19 @@ def main():
             elif message.startswith("[SERVER] Online users:"):
                 users = message.split(":", 1)[1].strip()
                 update_user_list(users)
+            elif message.startswith("[SERVER] Username changed to "):
+                new_name = message[
+                    len("[SERVER] Username changed to ") :
+                ].strip()
+                if new_name.endswith("."):
+                    new_name = new_name[:-1]
+                if new_name:
+                    username = new_name
+                    set_status(f"Connected as {username}")
+                    show_users()
+                append_history("public", message, "server")
+                if current_view == "public":
+                    insert_message(message, "server")
             elif message == "[SERVER] Entered the secret room.":
                 in_secret = True
                 secret_btn.config(text="🔓 Leave Secret")
@@ -950,7 +426,11 @@ def main():
                 # Show secret history if any
                 secret_history = histories.get("secret", [])
                 if secret_history:
-                    insert_message("[SERVER] Last 15 secret messages:\n" + "\n".join(secret_history), "server")
+                    insert_message(
+                        "[SERVER] Last 15 secret messages:\n"
+                        + "\n".join(secret_history),
+                        "server",
+                    )
             elif message == "[SERVER] Left the secret room.":
                 in_secret = False
                 secret_btn.config(text="🔒 Secret")
@@ -982,37 +462,12 @@ def main():
         if current_view == room_key:
             insert_message(message, "chat")
 
-    def connect(uname):
-        """
-        # Description
-        Attempt to connect to the server with the given username.
-
-        # Arguments
-        uname: the username to connect with
-
-        # Returns
-        socket object if connection successful, None otherwise
-        """
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((HOST, PORT))
-            sock.sendall(uname.encode())
-            response = sock.recv(BUFFER_SIZE).decode()
-            root.after(0, lambda: print_message(response))
-            if "Welcome" in response:
-                return sock
-            else:
-                sock.close()
-                return None
-        except:
-            return None
-
     def connect_flow():
         """
         # Description
         Handle the connection process: get username, connect to server, start receiving messages.
         """
-        nonlocal client_socket, username, connected
+        nonlocal username, connected
         if connected:
             insert_message("[LOCAL] Already connected. 🌼", "local")
             return
@@ -1021,13 +476,14 @@ def main():
         )
         if not uname:
             return
-        client_socket = connect(uname.strip())
-        if not client_socket:
+        response, ok = client.connect(uname.strip())
+        if not ok:
             messagebox.showerror(
                 "Oops! 😞",
                 "Invalid username or connection failed. Try again.",
             )
             return
+        root.after(0, lambda: print_message(response))
         username = uname.strip()
         connected = True
         set_status(f"Connected as {username}")
@@ -1040,19 +496,15 @@ def main():
         # Description
         Handle the disconnection process: send quit command, close socket, reset state.
         """
-        nonlocal client_socket, connected, in_secret
+        nonlocal connected, in_secret
         if not connected:
             insert_message("[LOCAL] Not connected. 🌼", "local")
             return
         try:
-            client_socket.sendall("/quit".encode())
+            client.send("/quit")
         except:
             pass
-        try:
-            client_socket.close()
-        except:
-            pass
-        client_socket = None
+        client.close()
         connected = False
         in_secret = False
         secret_btn.config(text="🔒 Secret")
@@ -1066,7 +518,7 @@ def main():
         # Description
         Send a message to the server based on the current view (public, secret, or DM).
         """
-        if not client_socket:
+        if not connected or not client.is_connected():
             insert_message("[LOCAL] Connect first. 🌼", "local")
             return
         message = entry.get().strip()
@@ -1076,9 +528,9 @@ def main():
         try:
             if current_view.startswith("dm:"):
                 target = current_view.split(":", 1)[1]
-                client_socket.sendall(f"/dm {target} {message}".encode())
+                client.send(f"/dm {target} {message}")
             else:
-                client_socket.sendall(message.encode())
+                client.send(message)
         except:
             insert_message("[ERROR] Failed to send message.", "error")
 
@@ -1087,11 +539,11 @@ def main():
         # Description
         Request the list of online users from the server.
         """
-        if not client_socket:
+        if not connected or not client.is_connected():
             insert_message("[LOCAL] Connect first. 🌼", "local")
             return
         try:
-            client_socket.sendall("/users".encode())
+            client.send("/users")
         except:
             insert_message("[ERROR] Failed to get users.", "error")
 
@@ -1106,37 +558,40 @@ def main():
         # Clear existing labels
         for widget in users_container.winfo_children():
             widget.destroy()
-        
+
         if users_line == "No users connected." or users_line == "":
             return
-        
+
         user_list = [u.strip() for u in users_line.split(",") if u.strip()]
         if username and username in user_list:
             user_list.remove(username)
             user_list.insert(0, f"{username} (You)")
-        
+
         for user in user_list:
             if user.endswith(" (You)"):
-                fg = colors["accent_dark"]
+                fg = colors["text"]
                 font = ("Comic Sans MS", 10, "bold")
             else:
                 fg = colors["text"]
                 font = ("Comic Sans MS", 10)
-            
+
             label = tk.Label(
-                users_container, 
-                text=user, 
-                bg=colors["white"], 
-                fg=fg, 
-                font=font, 
+                users_container,
+                text=user,
+                bg=colors["white"],
+                fg=fg,
+                font=font,
                 anchor="w",
                 padx=5,
-                pady=1
+                pady=1,
             )
             label.pack(fill=tk.X)
             # Bind double-click to open DM
             clean_user = user.replace(" (You)", "")
-            label.bind("<Double-Button-1>", lambda e, u=clean_user: open_dm_from_list(u))
+            label.bind(
+                "<Double-Button-1>",
+                lambda e, u=clean_user: open_dm_from_list(u),
+            )
 
     def start_auto_refresh():
         """
@@ -1144,14 +599,20 @@ def main():
         Start the automatic refresh of the user list every 5 seconds.
         """
         nonlocal refresh_job
+
         def refresh():
             nonlocal refresh_job
-            if connected and client_socket:
+            if connected and client.is_connected():
                 show_users()
             refresh_job = root.after(5000, refresh)  # 5 seconds
+
         refresh_job = root.after(5000, refresh)
 
     def stop_auto_refresh():
+        """
+        # Description
+        Stop the automatic refresh of the user list.
+        """
         nonlocal refresh_job
         if refresh_job:
             root.after_cancel(refresh_job)
@@ -1162,7 +623,7 @@ def main():
         # Description
         Open a dialog to select a user to DM and switch to DM view.
         """
-        if not client_socket:
+        if not connected or not client.is_connected():
             insert_message("[LOCAL] Connect first. 🌼", "local")
             return
         target = simpledialog.askstring(
@@ -1182,7 +643,9 @@ def main():
                     text = text[:-6]  # remove " (You)"
                 users.append(text)
         if target not in users:
-            messagebox.showerror("Invalid User 😞", f"User '{target}' not found.")
+            messagebox.showerror(
+                "Invalid User 😞", f"User '{target}' not found."
+            )
             return
         if target == username:
             messagebox.showerror("Invalid", "You cannot DM yourself. 😊")
@@ -1194,7 +657,7 @@ def main():
         # Description
         Open a dialog to change the username.
         """
-        if not client_socket:
+        if not connected or not client.is_connected():
             insert_message("[LOCAL] Connect first. 🌼", "local")
             return
         new_name = simpledialog.askstring(
@@ -1203,18 +666,22 @@ def main():
         if not new_name:
             return
         try:
-            client_socket.sendall(f"/rename {new_name}".encode())
+            client.send(f"/rename {new_name}")
         except:
             insert_message("[ERROR] Failed to rename.", "error")
 
     def toggle_secret():
+        """
+        # Description
+        Toggle between entering and leaving the secret room based on the current state.
+        """
         nonlocal in_secret
-        if not client_socket:
+        if not connected or not client.is_connected():
             insert_message("[LOCAL] Connect first. 🌼", "local")
             return
         if in_secret:
             try:
-                client_socket.sendall("/secret_leave".encode())
+                client.send("/secret_leave")
                 in_secret = False
                 secret_btn.config(text="🔒 Secret")
                 secret_view_btn.config(state=tk.DISABLED)
@@ -1229,7 +696,7 @@ def main():
             if not pwd:
                 return
             try:
-                client_socket.sendall(f"/secret {pwd}".encode())
+                client.send(f"/secret {pwd}")
                 in_secret = True
                 secret_btn.config(text="🔓 Leave Secret")
                 secret_view_btn.config(state=tk.NORMAL)
@@ -1239,7 +706,11 @@ def main():
                 insert_message("[ERROR] Failed to enter secret.", "error")
 
     def toggle_mute():
-        if not client_socket:
+        """
+        # Description
+        Toggle the mute status of a user.
+        """
+        if not connected or not client.is_connected():
             insert_message("[LOCAL] Connect first. 🌼", "local")
             return
         target = simpledialog.askstring(
@@ -1261,51 +732,65 @@ def main():
                 insert_message(f"[LOCAL] {target} is already muted.", "local")
 
     def quit_app():
-        if client_socket:
+        """
+        # Description
+        Quit the application and close the connection to the server.
+        """
+        if connected and client.is_connected():
             try:
-                client_socket.sendall("/quit".encode())
-                client_socket.close()
+                client.send("/quit")
+                client.close()
             except:
                 pass
         root.quit()
 
-    def receive_messages(sock):
-        """
-        # Description
-        Receive messages from the server in a separate thread and process them.
-
-        # Arguments
-        sock: the client socket
-        """
-        while True:
-            try:
-                message = sock.recv(BUFFER_SIZE).decode()
-                if not message:
-                    break
-                for line in message.splitlines():
-                    line = line.strip()
-                    if not line:
-                        continue
-                    root.after(0, lambda msg=line: print_message(msg))
-            except:
-                break
-        root.after(
-            0, lambda: insert_message("👋 [SERVER] Connection closed.", "error")
-        )
-        root.after(0, lambda: set_status("Disconnected"))
-
     root.protocol("WM_DELETE_WINDOW", quit_app)
 
     def start_receiver():
-        receive_thread = threading.Thread(
-            target=receive_messages, args=(client_socket,)
-        )
-        receive_thread.daemon = True
-        receive_thread.start()
+        """
+        # Description
+        Start the background thread to receive messages from the server and handle them with callbacks.
+        """
+
+        def on_message(raw_message):
+            for line in raw_message.splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                root.after(0, lambda msg=line: print_message(msg))
+
+        def on_disconnect():
+            """
+            # Description
+            Handle the disconnection event by updating the UI and status.
+            """
+            root.after(
+                0,
+                lambda: insert_message(
+                    "👋 [SERVER] Connection closed.", "error"
+                ),
+            )
+            root.after(0, lambda: set_status("Disconnected"))
+
+        client.start_receiver(on_message, on_disconnect)
 
     def open_dm_from_list(target):
         if target:
             set_view(f"dm:{target}")
+
+    public_view_btn.config(command=lambda: set_view("public"))
+    secret_view_btn.config(command=lambda: set_view("secret"))
+    users_btn.config(command=show_users)
+    dm_btn.config(command=send_dm)
+    rename_btn.config(command=rename_user)
+    secret_btn.config(command=toggle_secret)
+    mute_btn.config(command=toggle_mute)
+    quit_btn.config(command=quit_app)
+    send_button.config(command=send_message)
+    connect_btn.config(command=connect_flow)
+    disconnect_btn.config(command=disconnect_flow)
+    users_refresh.config(command=show_users)
+    entry.bind("<Return>", lambda e: send_message())
 
     secret_view_btn.config(state=tk.DISABLED)
 

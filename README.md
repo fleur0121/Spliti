@@ -56,13 +56,6 @@ You can still enter the following server commands in the chat input if you want.
 | `/help`                    | Show available commands ❓         |
 | `/quit`                    | Leave the chat 👋                  |
 
-### Local commands (terminal client only)
-
-| Command              | Description                 |
-| -------------------- | --------------------------- |
-| `/mute <username>`   | Mute a user's messages 🤫   |
-| `/unmute <username>` | Unmute a user's messages 🔊 |
-
 ---
 
 ## Technologies Used 🛠️
@@ -105,7 +98,7 @@ You will be prompted to set the secret room password.
 Open another terminal and run:
 
 ```bash
-python3 app/new_client.py
+python3 app/chat_app.py
 ```
 
 You can open multiple GUI clients to simulate multiple users.
@@ -127,7 +120,6 @@ hello everyone
 /rename Fuka
 /secret mypass
 /secret_leave
-/mute Alice
 /users
 ```
 
@@ -159,14 +151,15 @@ There is no automatic reconnection feature.
 The system uses TCP to ensure reliable message delivery.
 
 Limitation:
-Messages are stored only in memory for the current server session. When the
-server restarts, history is lost.
+Messages are stored only in memory for the current server session.
+
+When the server restarts, history is lost.
 
 History behavior:
 
 - Public chat: new clients see the last 15 public messages on connect
 - Secret room: clients see the last 15 secret messages upon entering
-- Direct messages: `/dm <username>` shows the last 15 DMs with that user
+- Direct messages: clients see the last 15 DMs with that user
 
 ---
 
@@ -190,7 +183,9 @@ This application is not secure for sensitive communication.
 ```text
 TERMKAIWA/
 ├── app/
-│   ├── new_client.py
+│   ├── chat_app.py
+│   ├── chat_ui.py
+│   ├── chat_client.py
 │   └── server.py
 └── README.md
 ```
@@ -199,8 +194,8 @@ TERMKAIWA/
 
 ## Team Members 👫
 
-- Fuka Nagata (301608021)
-- Narihiro Okada (301462533)
+- Fuka Nagata (301608021, fna16@sfu.ca)
+- Narihiro Okada (301462533, noa15@sfu.ca)
 
 ---
 
@@ -208,11 +203,11 @@ TERMKAIWA/
 
 ### GenAI Usage 🤖
 
-ChatGPT was used to assist with:
+ChatGPT and GitHub Copilot were used to assist with:
 
 - Debugging socket communication issues and understanding error messages
 
-- Assisting with the design and refinement of the GUI using tkinter
+- Assisting with the design, implementation, and refinement of the GUI using tkinter
 
 - Suggesting improvements for code structure and organization
 
@@ -229,6 +224,10 @@ ChatGPT was used to assist with:
 - Python Socket Programming Documentation
 
 - Python threading module documentation
+
+- Python networking tutorials (https://www.youtube.com/watch?v=oEOiBt6mD6Y, https://www.youtube.com/playlist?list=PLhTjy8cBISErYuLZUvVOYsR1giva2payF)
+
+- TA tutorials (https://www.youtube.com/playlist?list=PL-8C2cUhmkO1yWLTCiqf4mFXId73phvdx)
 
 - tkinter module documentation (https://docs.python.org/3/library/tkinter.html)
 
