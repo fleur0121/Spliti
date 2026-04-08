@@ -54,8 +54,6 @@ You can still enter the following server commands in the chat input if you want.
 | `/help`                    | Show available commands ❓         |
 | `/quit`                    | Leave the chat 👋                  |
 
----
-
 ## Technologies Used 🛠️
 
 - Python 3 🐍
@@ -210,10 +208,12 @@ TERMKAIWA/
 - chat_client.py: Socket connection and background receive loop
 - server.py: Multi-client chat server with rooms, history, and commands
 
-## Team Members 👫
+## Group Members
 
-- Fuka Nagata (301608021, fna16@sfu.ca)
-- Narihiro Okada (301462533, noa15@sfu.ca)
+| Name           | Student ID | Email        |
+| -------------- | ---------- | ------------ |
+| Fuka Nagata    | 301608021  | fna16@sfu.ca |
+| Narihiro Okada | 301462533  | noa15@sfu.ca |
 
 ## Academic Integrity & References 📚
 
