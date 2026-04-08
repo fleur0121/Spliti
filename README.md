@@ -6,8 +6,6 @@ Course: CMPT 371 – Data Communications & Networking
 Instructor: Mirza Zaeem Baig
 Semester: Spring 2026
 
----
-
 ## Overview 🌸
 
 TermKaiwa is a chat application built on Python’s Socket API (TCP).
@@ -21,8 +19,6 @@ The system follows a client-server architecture and supports:
 - Username change ✨
 - Mute specific users locally 🤫
 
----
-
 ## Features ✨
 
 - Multiple clients can connect simultaneously 👥
@@ -35,8 +31,6 @@ The system follows a client-server architecture and supports:
 - Secret room with password 🔐
 - Client-side mute 🤐
 - Graphical User Interface using tkinter 🖥️
-
----
 
 ## Commands (Optional) 📋
 
@@ -65,14 +59,10 @@ You can still enter the following server commands in the chat input if you want.
 - Threading (for handling multiple clients concurrently) 🧵
 - tkinter (GUI client) 🖼️
 
----
-
 ## Prerequisites 📋
 
 - Python 3.10 or higher 🐍
 - pip installed 📦
-
----
 
 ## Installation 🚀
 
@@ -128,8 +118,6 @@ In the GUI:
 - Enter a username
 - Send messages or use the toolbar (Users, DM, Rename, Secret)
 
----
-
 ## Example Usage 🌟
 
 1. Start the server
@@ -148,8 +136,6 @@ hello everyone
 /users
 ```
 
----
-
 ## System Limitations & Design Considerations ⚠️
 
 ### Handling Multiple Clients
@@ -160,16 +146,12 @@ Each client runs in a separate thread.
 Limitation:
 Thread-based design may not scale efficiently for a very large number of users.
 
----
-
 ### Client Disconnections
 
 Disconnected clients are removed from the active list and other users are notified.
 
 Limitation:
 There is no automatic reconnection feature.
-
----
 
 ### Message Handling
 
@@ -186,16 +168,12 @@ History behavior:
 - Secret room: clients see the last 15 secret messages upon entering
 - Direct messages: clients see the last 15 DMs with that user
 
----
-
 ### Security
 
 Messages are transmitted without encryption.
 
 Limitation:
 This application is not secure for sensitive communication.
-
----
 
 ### GUI Environment
 
@@ -204,13 +182,9 @@ The GUI is built with tkinter.
 Limitation:
 Some environments may not have tkinter available, configured or may not support GUI applications.
 
----
-
 ## Video Demo 🎥
 
 (Add your video link here)
-
----
 
 ## Repository Structure 📁
 
@@ -224,14 +198,10 @@ TERMKAIWA/
 └── README.md
 ```
 
----
-
 ## Team Members 👫
 
 - Fuka Nagata (301608021, fna16@sfu.ca)
 - Narihiro Okada (301462533, noa15@sfu.ca)
-
----
 
 ## Academic Integrity & References 📚
 
