@@ -142,7 +142,7 @@ def main():
     current_view = "public"
     histories = {"public": [], "secret": []}
     # Keep a per-view history so switching tabs redraws correctly.
-    refresh_job = None
+    refresh_job = None  # Tkinter after() job id
 
     def get_message_parts(text, tag):
         """
@@ -248,6 +248,7 @@ def main():
                 "timestamp": current_timestamp(),
             }
         )
+        # Limit history size to keep UI snappy.
         if len(history) > 200:
             del history[: len(history) - 200]
 

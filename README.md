@@ -203,6 +203,13 @@ TERMKAIWA/
 └── README.md
 ```
 
+### Files
+
+- chat_app.py: Main GUI client logic (event handling, message routing, state)
+- chat_ui.py: Tkinter UI layout and styling components
+- chat_client.py: Socket connection and background receive loop
+- server.py: Multi-client chat server with rooms, history, and commands
+
 ## Team Members 👫
 
 - Fuka Nagata (301608021, fna16@sfu.ca)

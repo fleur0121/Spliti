@@ -18,7 +18,7 @@ room_history = {
     "public": [],
     "secret": [],
 }
-dm_history = {}
+dm_history = {}  # keyed by (user_a, user_b)
 
 # Lock for thread-safe access
 clients_lock = threading.Lock()
@@ -36,7 +36,7 @@ def frame_message(message):
 def send_to_client(client_socket, message):
     """
     # Description
-    Send one message to one client.s
+    Send one message to one client.
 
     # Arguments
     client_socket: the socket to send to
