@@ -3,7 +3,7 @@
 import threading
 import tkinter as tk
 from datetime import datetime
-from tkinter import simpledialog, messagebox, ttk
+from tkinter import simpledialog, messagebox
 
 from chat_client import ChatClient
 from chat_ui import ChatUI
@@ -108,6 +108,7 @@ def main():
     # Description
     Main entry point for the GUI chat client.
     """
+    # Initialize the main application window and UI components
     root = tk.Tk()
     root.title("TermKaiwa 🌸")
     root.geometry("860x680")
@@ -139,8 +140,8 @@ def main():
     in_secret = False
     connected = False
     current_view = "public"
-    current_dm_user = None
     histories = {"public": [], "secret": []}
+    # Keep a per-view history so switching tabs redraws correctly.
     refresh_job = None
 
     def get_message_parts(text, tag):
@@ -273,15 +274,14 @@ def main():
         # Arguments
         view_key: the key for the view to set (e.g., 'public', 'secret', 'dm:user')
         """
-        nonlocal current_view, current_dm_user
+        nonlocal current_view
         if view_key == "secret" and not in_secret:
             insert_message("[LOCAL] Enter secret room first. 🌼", "local")
             return
         current_view = view_key
-        current_dm_user = None
         if view_key.startswith("dm:"):
-            current_dm_user = view_key.split(":", 1)[1]
-            view_label.config(text=f"Now chatting: DM with {current_dm_user}")
+            dm_user = view_key.split(":", 1)[1]
+            view_label.config(text=f"Now chatting: DM with {dm_user}")
         elif view_key == "secret":
             view_label.config(text="Now chatting: Secret Room")
         else:
@@ -298,6 +298,7 @@ def main():
         """
         nonlocal in_secret, username
 
+        # Helper functions to identify message types for special handling
         def is_command_help_line(line):
             trimmed = line.strip()
             if trimmed.startswith("[SERVER] Commands:"):
@@ -306,16 +307,20 @@ def main():
                 return True
             return False
 
+        # Check if line is a history header
         def is_history_header(line):
             trimmed = line.strip()
             return trimmed.startswith(
                 "[SERVER] Last 15 public messages:"
             ) or trimmed.startswith("[SERVER] Last 15 secret messages:")
 
+        # Check if line is a welcome message
         def is_welcome_line(line):
             return line.strip().startswith("[SERVER] Welcome,")
 
+        # Route messages by type: DM, server notice, join/leave, or normal chat.
         dm_sender = get_sender_dm(message)
+
         if dm_sender is not None:
             if is_muted(dm_sender):
                 return
@@ -330,6 +335,7 @@ def main():
                 if current_view == "public" or current_view == "secret":
                     render_view(current_view)
             return
+
         if message.startswith("[DM to "):
             target = message[len("[DM to ") :].split("]", 1)[0]
             view_key = f"dm:{target}"
@@ -337,6 +343,7 @@ def main():
             if current_view == view_key:
                 insert_message(message, "dm_out")
             return
+
         if message.startswith("[You]"):
             append_history(current_view, message, "you")
             if (
@@ -346,11 +353,13 @@ def main():
             ):
                 insert_message(message, "you")
             return
+
         if message.startswith("***") and message.endswith("***"):
             append_history("public", message, "join_leave")
             if current_view == "public":
                 insert_message(message, "join_leave")
             return
+
         if message.startswith("[SERVER]"):
             if "\n" in message:
                 if message.startswith("[SERVER] Online users:"):
@@ -381,6 +390,7 @@ def main():
                         append_history("public", line, "server")
                         if current_view == "public":
                             insert_message(line, "server")
+
             elif any(
                 kw in message
                 for kw in (
@@ -401,9 +411,11 @@ def main():
                 or is_welcome_line(message)
             ):
                 return
+
             elif message.startswith("[SERVER] Online users:"):
                 users = message.split(":", 1)[1].strip()
                 update_user_list(users)
+
             elif message.startswith("[SERVER] Username changed to "):
                 new_name = message[
                     len("[SERVER] Username changed to ") :
@@ -417,6 +429,7 @@ def main():
                 append_history("public", message, "server")
                 if current_view == "public":
                     insert_message(message, "server")
+
             elif message == "[SERVER] Entered the secret room.":
                 in_secret = True
                 secret_btn.config(text="🔓 Leave Secret")
@@ -431,12 +444,14 @@ def main():
                         + "\n".join(secret_history),
                         "server",
                     )
+
             elif message == "[SERVER] Left the secret room.":
                 in_secret = False
                 secret_btn.config(text="🔒 Secret")
                 secret_view_btn.config(state=tk.DISABLED)
                 public_view_btn.config(state=tk.NORMAL)
                 set_view("public")
+
             elif message == "[SERVER] Wrong password.":
                 in_secret = False
                 secret_btn.config(text="🔒 Secret")
@@ -449,6 +464,8 @@ def main():
                     insert_message(message, "server")
             return
         chat_sender = get_sender_chat(message)
+
+        # For normal chat messages, check if the sender is muted and route to the appropriate view.
         if chat_sender is not None:
             if is_muted(chat_sender):
                 return
@@ -562,6 +579,7 @@ def main():
         if users_line == "No users connected." or users_line == "":
             return
 
+        # Process user list and prioritize current user at the top
         user_list = [u.strip() for u in users_line.split(",") if u.strip()]
         if username and username in user_list:
             user_list.remove(username)
@@ -675,18 +693,12 @@ def main():
         # Description
         Toggle between entering and leaving the secret room based on the current state.
         """
-        nonlocal in_secret
         if not connected or not client.is_connected():
             insert_message("[LOCAL] Connect first. 🌼", "local")
             return
         if in_secret:
             try:
                 client.send("/secret_leave")
-                in_secret = False
-                secret_btn.config(text="🔒 Secret")
-                secret_view_btn.config(state=tk.DISABLED)
-                public_view_btn.config(state=tk.NORMAL)
-                set_view("public")
             except:
                 insert_message("[ERROR] Failed to leave secret.", "error")
         else:
@@ -697,11 +709,6 @@ def main():
                 return
             try:
                 client.send(f"/secret {pwd}")
-                in_secret = True
-                secret_btn.config(text="🔓 Leave Secret")
-                secret_view_btn.config(state=tk.NORMAL)
-                public_view_btn.config(state=tk.DISABLED)
-                set_view("secret")
             except:
                 insert_message("[ERROR] Failed to enter secret.", "error")
 
@@ -757,6 +764,7 @@ def main():
                 line = line.strip()
                 if not line:
                     continue
+                # Tkinter updates must run on the UI thread.
                 root.after(0, lambda msg=line: print_message(msg))
 
         def on_disconnect():

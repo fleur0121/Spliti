@@ -77,6 +77,7 @@ class ChatUI:
             highlightthickness=0,
         )
 
+        # Simple function to draw a flower shape on the canvas
         def draw_flower(canvas, x, y, petal, center, scale=1.0):
             r = 7 * scale
             canvas.create_oval(

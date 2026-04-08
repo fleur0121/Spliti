@@ -10,7 +10,7 @@ class ChatClient:
         self.port = port
         self.buffer_size = buffer_size
         self.socket = None
-        self._lock = threading.Lock()
+        self._lock = threading.Lock()  # protect socket across threads
 
     def is_connected(self):
         """

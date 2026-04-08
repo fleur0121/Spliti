@@ -421,23 +421,31 @@ def handle_client(client_socket, client_address, secret_password):
             remove_client(client_socket)
             return
 
+        name_taken = False
         with clients_lock:
             if proposed_username in username_to_socket:
                 send_to_client(
                     client_socket, "[SERVER] Username already taken."
                 )
-                remove_client(client_socket)
-                return
+                name_taken = True
+            else:
+                username = proposed_username
+                clients.append(client_socket)
+                socket_to_username[client_socket] = username
+                username_to_socket[username] = client_socket
+                socket_to_room[client_socket] = "public"
 
-            username = proposed_username
-            clients.append(client_socket)
-            socket_to_username[client_socket] = username
-            username_to_socket[username] = client_socket
-            socket_to_room[client_socket] = "public"
+        if name_taken:
+            remove_client(client_socket)
+            return
 
         print(f"[CONNECTED] {username} joined from {client_address}")
         send_to_client(client_socket, f"[SERVER] Welcome, {username}!")
-        broadcast(f"*** {username} joined the chat ***", exclude_client=None)
+        broadcast_room(
+            f"*** {username} joined the chat ***",
+            "public",
+            exclude_client=None,
+        )
 
         public_history = get_room_history("public")
         if public_history:
@@ -559,7 +567,11 @@ def handle_client(client_socket, client_address, secret_password):
                 send_to_client(client_socket, f"[You] {message}")
             else:
                 append_room_history("public", full_message)
-                broadcast(full_message, exclude_client=client_socket)
+                broadcast_room(
+                    full_message,
+                    "public",
+                    exclude_client=client_socket,
+                )
                 send_to_client(client_socket, f"[You] {message}")
 
     # Handle client disconnection and cleanup
@@ -570,7 +582,11 @@ def handle_client(client_socket, client_address, secret_password):
     finally:
         print(f"[LEFT] {username} left the chat.")
         remove_client(client_socket)
-        broadcast(f"*** {username} left the chat ***", exclude_client=None)
+        broadcast_room(
+            f"*** {username} left the chat ***",
+            "public",
+            exclude_client=None,
+        )
 
 
 def main():

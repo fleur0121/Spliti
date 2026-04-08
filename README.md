@@ -85,7 +85,24 @@ cd TermKaiwa
 
 ## Step-by-Step Run Guide 📖
 
-### Start the server
+### 0) Verify Python on a fresh machine
+
+```bash
+python3 --version
+```
+
+If the command is not found, install Python 3.10+ first.
+
+### 1) (Optional) Create a virtual environment
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+No external dependencies are required for this project.
+
+### 2) Start the server
 
 ```bash
 python3 app/server.py
@@ -93,7 +110,7 @@ python3 app/server.py
 
 You will be prompted to set the secret room password.
 
-### Start a client
+### 3) Start a client
 
 Open another terminal and run:
 
@@ -102,6 +119,14 @@ python3 app/chat_app.py
 ```
 
 You can open multiple GUI clients to simulate multiple users.
+
+### 4) Connect and chat
+
+In the GUI:
+
+- Click `Connect`
+- Enter a username
+- Send messages or use the toolbar (Users, DM, Rename, Secret)
 
 ---
 
@@ -169,6 +194,15 @@ Messages are transmitted without encryption.
 
 Limitation:
 This application is not secure for sensitive communication.
+
+---
+
+### GUI Environment
+
+The GUI is built with tkinter.
+
+Limitation:
+Some environments may not have tkinter available, configured or may not support GUI applications.
 
 ---
 
