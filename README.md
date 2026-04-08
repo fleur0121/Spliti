@@ -3,7 +3,9 @@
 ## Course Information
 
 Course: CMPT 371 – Data Communications & Networking
+
 Instructor: Mirza Zaeem Baig
+
 Semester: Spring 2026
 
 ## Overview 🌸
